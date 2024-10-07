@@ -1,57 +1,55 @@
-
-import { createPatient } from '../models/patientModel.js'; // Fixed naming convention
+import { Patient } from "../models/patientModel.js";
+import { logger } from "../utils/logger.js";
 
 const patientController = {
-  // Get all patients (implementation needed)
-  getAllPatients: async (req, res) => {
-    try {
-      // Placeholder: Fetch all patients logic goes here
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to retrieve patients', error: error.message });
-    }
-  },
-
-  // Get a patient by ID (implementation needed)
-  getPatientById: async (req, res) => {
-    try {
-      // Placeholder: Fetch patient by ID logic goes here
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to retrieve patient', error: error.message });
-    }
-  },
 
   // Create a new patient
   createPatient: async (req, res) => {
     try {
-      const { Patient } = req.body.Data; // Destructure patient data
+      const data = req.body.Data.Patient; 
+      const metaData = req.body.Metadata;
 
-      const result = await createPatient(Patient);
+      let patient = new Patient(data, metaData.ApiSender);
+  
+      // Check if patient exists
+      const patientExists = await patient.patientExists();
+      if (patientExists) {
+        // Update patient
+        logger.info(`Updating patient with metadata: ${JSON.stringify(metaData)}`);
+        const updateResult = await patient.updatePatient();
+        
+        if (updateResult.success) {
+          // Update insurance after updating patient
+          await patient.updateInsurance(updateResult.updatedPatientId);
+          logger.info(`Patient updated successfully for external ID: ${data.PatientID}`);
+          return res.status(201).json({ success: true, message: "Patient updated successfully" });
+        }
+        logger.error(`Failed to update patient with ID: ${data.PatientID}`);
+        return res.status(400).json({ success: false, message: "Failed to update patient" });
+      } 
+  
+      // Insert patient if not exists
+      logger.info(`Creating patient with metadata: ${JSON.stringify(metaData)}`);
+      const insertResult = await patient.insertPatient();
 
-      if (result) {
-        return res.status(201).json({ success: true, message: 'Patient data saved successfully' });
-      } else {
-        return res.status(400).json({ success: false, message: 'Failed to save patient data' });
+      if (!insertResult.success) {
+        logger.error(`Failed to insert patient: ${insertResult.message}`);
+        return res.status(400).json({ success: false, message: insertResult.message });
       }
+  
+      // Insert insurance after successful patient insertion
+      const insuranceResult = await patient.insertInsurance(insertResult.id);
+      if (insuranceResult) {
+        logger.info(`Patient data and insurance saved successfully for ID: ${insertResult.id}`);
+        return res.status(201).json({ success: true, message: "Patient data saved successfully", id: insertResult.id});
+      }
+  
+      logger.error("Failed to insert insurance after patient creation");
+      return res.status(400).json({ success: false, message: "Failed to insert insurance" });
+
     } catch (error) {
+      logger.error(`Error creating patient: ${error.message}`, { stack: error.stack });
       return res.status(500).json({ success: false, message: 'Failed to create patient', error: error.message });
-    }
-  },
-
-  // Update a patient (implementation needed)
-  updatePatient: async (req, res) => {
-    try {
-      // Placeholder: Update patient logic goes here
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to update patient', error: error.message });
-    }
-  },
-
-  // Delete a patient (implementation needed)
-  deletePatient: async (req, res) => {
-    try {
-      // Placeholder: Delete patient logic goes here
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to delete patient', error: error.message });
     }
   },
 };

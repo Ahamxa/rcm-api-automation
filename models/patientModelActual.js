@@ -1,8 +1,6 @@
-
 import oracledb from 'oracledb';
-import { logger } from '../utils/logger.js';
 
-export class Patient {
+export class QunatusPatient {
 
   constructor(patientData,source) {
     this.patientData = patientData;
@@ -18,12 +16,12 @@ export class Patient {
     }
   }
 
-  async patientExists() {
+  async patientExists(patientId) {
     const connection = await this.getConnection();
-    const checkSql = `SELECT COUNT(*) AS COUNT FROM INTEGRATED_PATIENT WHERE EXTERNAL_PATIENT_ID = :externalPatientId`;
+    const checkSql = `SELECT COUNT(*) AS COUNT FROM REG_PATIENT WHERE EXTERNAL_PATIENT_ID = :externalPatientId`;
     
     try {
-      const result = await connection.execute(checkSql, { externalPatientId: this.patientData.PatientID });
+      const result = await connection.execute(checkSql, { externalPatientId: patientId });
       return result.rows[0][0] > 0;
     } catch (err) {
       throw new Error('Error checking patient existence: ' + err.message);
@@ -32,116 +30,147 @@ export class Patient {
     }
   }
 
-  async migrateData(patientId) {
-    const connection = await this.getConnection();
-    
-    try {
-      const result = await connection.execute(
-        `
-        DECLARE
-            v_flag NUMBER;
-        BEGIN
-            wrapper_upsert_patient(
-                p_temp_patient_id => :p_temp_patient_id,
-                p_op_flag => :v_flag
-            );
-        END;
-        `,
-        {
-          p_temp_patient_id: patientId,
-          v_flag: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT}
-        },{ autoCommit: true }
-      );
-  
-      const flag = result.outBinds.v_flag;
-      if(flag==1){
-        logger.info(`patient migrated with internal id: ${JSON.stringify(patientId)}`);
-      }else{
-        logger.info(`migration failed for patient with internal id: ${JSON.stringify(patientId)}`);
-      }
-    } catch (err) {
-      throw new Error('Error migrating patient existence: ' + err.message);
-    } finally {
-      await connection.close();
-    }
-  }
-
-
-   // Function to insert a new patient record
-   async insertPatient() {
+  async insertPatientInActualTable(){
 
     let connection=await this.getConnection();
+    const procedureCallSql = `
+    BEGIN
+      PRST_REG_P_MGMT.insert_patient(
+        ip_practice_id => 261,
+        ip_primary_provider => NULL,
+        ip_patient_physician => NULL,
+        ip_patient_type => NULL,
+        ip_lname => :patientLast,
+        ip_fname => :patientFirst,
+        ip_minitial => NULL,
+        ip_mlname => NULL,
+        ip_mfname => NULL,
+        ip_mminitial => NULL,
+        ip_title => NULL,
+        ip_address => :patientAddressLine1,
+        ip_city => :patientCity,
+        ip_state => :patientState,
+        ip_zip => :patientZip,
+        ip_extzip => NULL,
+        ip_sex => :patientGender,
+        ip_mstatus => NULL,
+        ip_occupation => NULL,
+        ip_ssn => :patientSsn,
+        ip_mname => NULL,
+        ip_dob => TO_DATE(:patientDob, 'YYYY-MM-DD'),
+        ip_hphone => :patientPhone,
+        ip_wphone => NULL,
+        ip_wphone_ext => NULL,
+        ip_fax => NULL,
+        ip_cell => :patientMobilePhone,
+        ip_email => NULL,
+        ip_religion => NULL,
+        ip_country => NULL,
+        ip_empstat => NULL,
+        ip_employer => NULL,
+        ip_tor => NULL,
+        ip_primlang => NULL,
+        ip_race => NULL,
+        ip_ethnicity => NULL,
+        ip_prefered_contact => NULL,
+        ip_remarks => NULL,
+        ip_death_date => NULL,
+        ip_patient_notes => NULL,
+        ip_pnt => NULL,
+        ip_report_exempt => NULL,
+        ip_user_id => NULL,
+        ip_user_ip => NULL,
+        ip_phymast_id => NULL,
+        ip_surname => NULL,
+        ip_scan_image_id => NULL,
+        ip_patientlogin => NULL,
+        ip_patientpassword => NULL,
+        ip_deathcause => NULL,
+        ip_pcp_f => NULL,
+        ip_ref_phy => NULL,
+        ip_other_phy => NULL,
+        ip_reference_source => NULL,
+        ip_health_info_req_f => NULL,
+        ip_name_type => NULL,
+        ip_mothersurname => NULL,
+        ip_default_contact => NULL,
+        ip_other_phone => NULL,
+        ip_tel_code => NULL,
+        ip_tel_equ_code => NULL,
+        ip_dnp => NULL,
+        ip_user_note => NULL,
+        ip_dnp_rsn_id => NULL,
+        ip_shoe_size => NULL,
+        op_account_number => :accountNumber,
+        op_patient_id => :patientId,
+        op_pat_name => :patientName,
+        op_race => :patientRace
+      );
+    END;`;
 
-    const insertSql = `INSERT INTO INTEGRATED_PATIENT (
-      INTEGRATED_PATIENT_ID, EXTERNAL_PATIENT_ID, PATIENT_EVENT_ID, PATIENT_STATUS, PATIENT_FIRST, PATIENT_MIDDLE, PATIENT_LAST, PATIENT_DOB, PATIENT_SSN,
-      PATIENT_GENDER, PATIENT_ADDRESS_LINE1, PATIENT_ADDRESS_LINE2, PATIENT_CITY, PATIENT_STATE, PATIENT_ZIP, PATIENT_PHONE, PATIENT_MOBILE_PHONE, PATIENT_FLOOR,
-      PATIENT_ROOM, PATIENT_ADMIT_DATE, FACILITY_NAME, PLACE_OF_SERVICE_CODE, FACILITY_NPI, FACILITY_EXTERNAL_ID, FACILITY_ADDRESS_LINE1, FACILITY_ADDRESS_LINE2,
-      FACILITY_CITY, FACILITY_STATE, FACILITY_ZIP, MEDICARE_NUMBER, IS_ACO, SOURCE                        
-    ) 
-    VALUES (
-      PCARESP.SEQ_INTEGRATED_PATIENT.NEXTVAL, :externalPatientId, :patientEventId, :patientStatus, :patientFirst, :patientMiddle, :patientLast, 
-      TO_DATE(:patientDob, 'YYYY-MM-DD'), :patientSsn, :patientGender, :patientAddressLine1, :patientAddressLine2, :patientCity, :patientState, :patientZip, 
-      :patientPhone, :patientMobilePhone, :patientFloor, :patientRoom,  TO_DATE(:patientAdmitDate, 'YYYY-MM-DD'), :facilityName, :placeOfServiceCode, 
-      :facilityNpi, :facilityExternalId, :facilityAddressLine1, :facilityAddressLine2, :facilityCity, :facilityState, :facilityZip, :medicareNumber, 
-      :isAco,:source
-    ) 
-    RETURNING INTEGRATED_PATIENT_ID INTO :incomingPatientId`;
-
-    const insertBinds = {
-      incomingPatientId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
-      externalPatientId: this.patientData.PatientID,
-      patientEventId: this.patientData.PatientEventID,
-      patientStatus: this.patientData.PatientStatus,
-      patientFirst: this.patientData.PatientFirst,
-      patientMiddle: this.patientData.PatientMiddle,
-      patientLast: this.patientData.PatientLast,
-      patientDob: this.patientData.PatientDOB,
-      patientSsn: this.patientData.PatientSSN,
-      patientGender: this.patientData.PatientGender,
-      patientAddressLine1: this.patientData.PatientAddress?.AddressLine1 || null,
-      patientAddressLine2: this.patientData.PatientAddress?.AddressLine2 || null,
-      patientCity: this.patientData.PatientAddress?.City || null,
-      patientState: this.patientData.PatientAddress?.State || null,
-      patientZip: this.patientData.PatientAddress?.Zip || null,
-      patientPhone: this.patientData.PatientPhone,
-      patientMobilePhone: this.patientData.PatientMobilePhone,
-      patientFloor: this.patientData.PatientFloor,
-      patientRoom: this.patientData.PatientRoom,
-      patientAdmitDate: this.patientData.PatientAdmitDate.split('T')[0],
-      facilityName: this.patientData.Facility?.FacilityName || null,
-      placeOfServiceCode: this.patientData.Facility?.PlaceOfServiceCode || null,
-      facilityNpi: this.patientData.Facility?.NPI || null,
-      facilityExternalId: this.patientData.Facility?.ExternalID || null,
-      facilityAddressLine1: this.patientData.Facility?.FacilityAddress?.AddressLine1 || null,
-      facilityAddressLine2: this.patientData.Facility?.FacilityAddress?.AddressLine2 || null,
-      facilityCity: this.patientData.Facility?.FacilityAddress?.City || null,
-      facilityState: this.patientData.Facility?.FacilityAddress?.State || null,
-      facilityZip: this.patientData.Facility?.FacilityAddress?.Zip || null,
-      medicareNumber: this.patientData.MedicareNumber,
-      isAco: `${this.patientData.IsACO ? 1 : 0}`,
-      source:this.source
-    };
-
-    
+  const procedureBinds = {
+    patientLast: this.patientData.PatientLast,
+    patientFirst: this.patientData.PatientFirst,
+    patientAddressLine1: this.patientData.PatientAddress?.AddressLine1 || null,
+    patientCity: this.patientData.PatientAddress?.City || null,
+    patientState: this.patientData.PatientAddress?.State || null,
+    patientZip: this.patientData.PatientAddress?.Zip || null,
+    patientGender: this.patientData.PatientGender,
+    patientSsn: this.patientData.PatientSSN,
+    patientDob: this.patientData.PatientDOB,
+    patientPhone: this.patientData.PatientPhone,
+    patientMobilePhone: this.patientData.PatientMobilePhone || null,
+    accountNumber: { type: oracledb.STRING, dir: oracledb.BIND_OUT },
+    patientId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
+    patientName: { type: oracledb.STRING, dir: oracledb.BIND_OUT },
+    patientRace: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }  // Adjust based on your cursor handling
+  };
 
 
     try {
 
-      //insert in temp tables
-      const result = await connection.execute(insertSql, insertBinds, { autoCommit: true });
+      let found=await this.patientExists();
 
-      logger.info(`patient created with internal id: ${JSON.stringify(result.outBinds.incomingPatientId[0])}`);
+      if(!found){
 
-      //migrate data 
+        console.log("patient does not exists in actual tables");
 
-      await this.migrateData(result.outBinds.incomingPatientId[0] )
+         // Call the procedure to migrate data to the actual table
+         const procedureResult = await connection.execute(procedureCallSql, procedureBinds, { autoCommit: true });
 
-      return { success: true, id: result.outBinds.incomingPatientId[0] };
+         // Optional: Handle the output from the procedure
+         const { accountNumber, patientId, patientName } = procedureResult.outBinds;
+         console.log(`Account Number: ${accountNumber}, Patient ID: ${patientId}, Patient Name: ${patientName}`);
+
+
+        const updateSql = `UPDATE REG_PATIENT
+                    SET EXTERNAL_PATIENT_ID = :externalPatientId, EXTERNAL_SOURCE_NAME = :source
+                    WHERE PATIENT_ID = :patientId`;
+
+        const updateBinds = {
+         externalPatientId: this.patientData.PatientID,
+         source: this.source,
+         patientId: patientId
+        };
+
+         // Update externalPatientId and source in the actual table
+          await connection.execute(updateSql, updateBinds, { autoCommit: true });
+
+         return { success: true,id: patientId, externalId:this.patientData.PatientID};
+
+        }else{
+
+          console.log("patient found in actual tables")
+
+        return { success: false};
+        }
+
     } catch (err) {
-      throw new Error('Error inserting patient record: ' + err.message);
+      throw new Error('Error inserting patient record in actual tables: ' + err.message);
     }finally {
       await connection.close();
     }
+
   }
 
   async updatePatient() {
@@ -200,11 +229,7 @@ export class Patient {
       let result = await connection.execute(updateSql, updateBinds, { autoCommit: true });
   
       // Access the updated patient ID from result.outBinds
-      const updatedId = result.outBinds.updatedPatientId[0];
-      logger.info(`patient updated with  internal id: ${JSON.stringify(result.outBinds.updatedPatientId[0])}`);
-
-      //migrate data
-      this.migrateData(updatedId);
+      const updatedId = result.outBinds.updatedPatientId[0];  // Extracting the first value from the array
   
       return { success: true, updatedRows: result.rowsAffected, updatedPatientId: updatedId };
     } catch (err) {
@@ -265,7 +290,7 @@ const selectInsuranceSql = `SELECT INSURANCE_SET_ID FROM PATIENT_INSURANCE WHERE
 const existingInsuranceResult = await connection.execute(selectInsuranceSql, {
   integratedPatientId: patientId
 });
-
+console.log(existingInsuranceResult);
 const existingInsuranceIds = existingInsuranceResult.rows.map(row => row[0]);
 try {
   // Loop through the updated insurance data
@@ -319,6 +344,7 @@ try {
 
   // Commit after updating/inserting all records
   await connection.commit();
+  console.log('Insurance data updated and new records inserted successfully.');
   return true;
 } 
 catch (err) {

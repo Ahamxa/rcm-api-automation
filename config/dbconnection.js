@@ -1,39 +1,28 @@
 import oracledb from 'oracledb';
+import dotenv from 'dotenv';
 
-const config = {
-  user: 'pcaresp',           
-  password: 'pcaresp',        
-  connectString: '192.168.88.80:1521/pcarespdb',  
-};
+// Load environment variables
+dotenv.config();
 
-const checkConnectionAndListTables = async () => {
-  let connection;
-
+// Oracle DB connection
+export const connectDB = async () => {
   try {
-   
-    connection = await oracledb.getConnection(config);
-    console.log('Connected to Oracle Database!');
+   await oracledb.createPool({
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      connectString: process.env.DB_CONNECT_STRING,
+      poolMin: 10,
+      poolMax: 20,
+      poolIncrement: 5,
+      queueTimeout: 60000,
+      poolTimeout: 60,
+    });
+    console.log('OracleDB connected successfully!');
 
-  
-    const result = await connection.execute(`
-      SELECT table_name FROM user_tables
-    `);
-
-   
-    console.log('Tables in the database:', result.rows);
   } catch (err) {
-    console.error('Error connecting to the database:', err);
-  } finally {
-    if (connection) {
-      try {
-        await connection.close();  
-        console.log('Connection closed');
-      } catch (err) {
-        console.error('Error closing connection:', err);
-      }
-    }
+    console.error('Database connection error:', err);
+
+    process.exit(1);
   }
 };
 
-
-checkConnectionAndListTables ();

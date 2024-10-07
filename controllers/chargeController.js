@@ -1,57 +1,36 @@
-
-import { createCharge } from "../models/chargeModel.js";
+import { Charge } from "../models/chargeModel.js";
+import { logger } from "../utils/logger.js";
 
 const chargeController = {
- 
-  getAllCharges: async (req, res) => {
-    try {
-     
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to retrieve charges', error: error.message });
-    }
-  },
 
- 
-  getChargeById: async (req, res) => {
-    try {
-      
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to retrieve charge', error: error.message });
-    }
-  },
-
-  // Create a new patient
+  // Create a new charge
   createCharge: async (req, res) => {
     try {
-      const { Data } = req.body; 
+      const { Data, Metadata } = req.body;
+      logger.info(`Creating charge with metadata: ${JSON.stringify(Metadata)}`);
 
-      const result = await createCharge(Data);
+      const charge = new Charge();
+
+      // Check if charge already exists
+      if (await charge.chargeExists(Data.BillingEvent)) {
+        logger.warn(`Charge data already exists for BillingEvent: ${Data.BillingEvent.id}`);
+        return res.status(400).json({ success: false, message: 'Charge data already exists' });
+      }
+
+      // Insert new charge
+      const result = await charge.insert(Data.BillingEvent, Metadata.ApiSender);
+      await charge.insertCharges(Data.BillingEvent.Charges, result.id);
 
       if (result) {
-        return res.status(201).json({ success: true, message: 'Charge data saved successfully' });
+        logger.info(`Charge data saved successfully for BillingEvent ID: ${Data.BillingEvent.id}`);
+        return res.status(201).json({ success: true, message: 'Charge data saved successfully', result });
       } else {
+        logger.error("Failed to save charge data");
         return res.status(400).json({ success: false, message: 'Failed to save charge data' });
       }
     } catch (error) {
+      logger.error(`Error creating charge: ${error.message}`, { stack: error.stack });
       return res.status(500).json({ success: false, message: 'Failed to create charge', error: error.message });
-    }
-  },
-
-  
-  updateCharge: async (req, res) => {
-    try {
-    
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to update charge', error: error.message });
-    }
-  },
-
-  
-  deleteCharge: async (req, res) => {
-    try {
-      
-    } catch (error) {
-      res.status(500).json({ success: false, message: 'Failed to delete charge', error: error.message });
     }
   },
 };
