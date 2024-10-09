@@ -189,3 +189,12 @@
 {"level":"info","message":"Patient updated successfully for external ID: 98765"}
 {"level":"info","message":"Response: 201 Created; Time: 2024-10-09T07:51:15.170Z, Duration: 1597ms"}
 {"level":"info","message":"Server is shutting down..."}
+{"level":"info","message":"Server running on port 5000"}
+{"level":"info","message":"Incoming Request: POST /api/patients, Time: 2024-10-09T08:07:11.205Z, Body: {\"Metadata\":{\"ApiSender\":\"NullTestSender\",\"ApiConsumer\":null,\"MessageDateTime\":\"2024-10-01T16:00:00Z\"},\"Data\":{\"Patient\":{\"PatientID\":33333,\"PatientEventID\":null,\"PatientFirst\":\"Charlie\",\"PatientLast\":\"Brown\",\"PatientDOB\":\"1992-05-10\",\"PatientSSN\":null,\"PatientGender\":\"M\",\"PatientAddress\":{\"AddressLine1\":\"789 Broadway St\",\"AddressLine2\":null,\"City\":\"BigCity\",\"State\":\"BC\",\"Zip\":\"67890\"},\"PatientMobilePhone\":null,\"PatientAdmitDate\":null,\"Facility\":null,\"Insurance\":[],\"MedicareNumber\":null}}}"}
+{"level":"info","message":"Creating patient with metadata: {\"ApiSender\":\"NullTestSender\",\"ApiConsumer\":null,\"MessageDateTime\":\"2024-10-01T16:00:00Z\"}"}
+{"level":"info","message":"patient created with internal id: 91"}
+{"level":"info","message":"patient migrated with internal id: 91"}
+{"level":"info","message":"Patient data and insurance saved successfully for ID: 91"}
+{"level":"info","message":"Response: 201 Created; Time: 2024-10-09T08:07:13.180Z, Duration: 1975ms"}
+{"level":"info","message":"Server running on port 5000"}
+{"level":"info","message":"Server is shutting down..."}

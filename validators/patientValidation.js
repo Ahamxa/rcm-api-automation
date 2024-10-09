@@ -30,17 +30,17 @@ const patientSchema = Joi.object({
         Zip: Joi.string().allow(null, '').optional()
       }).allow(null, '').optional(),
 
-      PatientPhone: Joi.string().allow('').required(),
+      PatientPhone: Joi.string().allow(null,'').optional(),
       PatientMobilePhone: Joi.string().allow(null, '').optional(),
       PatientFloor: Joi.string().allow(null, '').optional(),
       PatientRoom: Joi.string().allow(null, '').optional(),
       PatientAdmitDate: Joi.date().iso().allow(null, '').optional(),
 
       Facility: Joi.object({
-        FacilityName: Joi.string().allow(null, '').required(),
-        PlaceOfServiceCode: Joi.number().integer().allow(null, '').required(),
-        NPI: Joi.string().allow(null, '').required(),
-        ExternalID: Joi.string().allow(null, '').required(),
+        FacilityName: Joi.string().allow(null, '').optional(),
+        PlaceOfServiceCode: Joi.number().integer().allow(null, '').optional(),
+        NPI: Joi.string().allow(null, '').optional(),
+        ExternalID: Joi.string().allow(null, '').optional(),
 
         FacilityAddress: Joi.object({
           AddressLine1: Joi.string().min(1).max(100).allow(null, '').optional(),
@@ -55,19 +55,19 @@ const patientSchema = Joi.object({
       Insurance: Joi.array().items(
         Joi.object({
           InsuranceSetID: Joi.number().integer().required(),
-          CompanyName: Joi.string().allow(null, '').required(),
+          CompanyName: Joi.string().allow(null, '').optional(),
           CompanyAddress: Joi.object().allow(null, '').optional(),
           SubscriberAddress: Joi.object().allow(null, '').optional(),
-          InsurancePriority: Joi.string().allow(null, '').required(),
-          PolicyNumber: Joi.string().allow(null, '').required(),
+          InsurancePriority: Joi.string().allow(null, '').optional(),
+          PolicyNumber: Joi.string().allow(null, '').optional(),
           SubscriberEmployerAddress: Joi.object().allow(null, '').optional()
         })
       ).allow(null).required(),
 
       PatientLanguage: Joi.object({
-        LanguageName: Joi.string().allow(null, '').required(),
-        Code_639_1: Joi.string().length(2).allow(null, '').required(),
-        Code_639_2: Joi.string().length(3).allow(null, '').required()
+        LanguageName: Joi.string().allow(null, '').optional(),
+        Code_639_1: Joi.string().length(2).allow(null, '').optional(),
+        Code_639_2: Joi.string().length(3).allow(null, '').optional()
       }).allow(null, '').optional(),
 
       IsACO: Joi.boolean().allow(null, '').optional(),
