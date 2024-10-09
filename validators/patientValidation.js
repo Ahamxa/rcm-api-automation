@@ -3,75 +3,76 @@ import Joi from 'joi';
 // Define the Joi schema
 const patientSchema = Joi.object({
   Metadata: Joi.object({
-    ApiSender: Joi.string().required(),
-    ApiConsumer: Joi.string().required(),
-    MessageDateTime: Joi.date().iso().required()
+    ApiSender: Joi.string().allow(null, '').required(),
+    ApiConsumer: Joi.string().allow(null, '').optional(),
+    MessageDateTime: Joi.date().iso().optional(),
   }).required(),
 
   Data: Joi.object({
     Patient: Joi.object({
-      PatientID: Joi.number().integer().required(),
-      PatientEventID: Joi.number().integer().optional(),
-      PatientStatus: Joi.string().valid('Active', 'Inactive').required(),
+      PatientID: Joi.number().integer().required(), // Cannot be empty
+      PatientEventID: Joi.number().integer().allow(null, '').optional(),
+      PatientStatus: Joi.string().optional(),
       PatientFirst: Joi.string().min(1).max(50).required(),
       PatientMiddle: Joi.string().allow(null, '').optional(),
       PatientLast: Joi.string().min(1).max(50).required(),
       PatientDOB: Joi.date().iso().required(),
-      PatientSSN: Joi.string().pattern(/^\d{9}$/).optional(),
-      PatientGender: Joi.string().valid('M', 'F', 'O').required(), // M, F, or O (for Other)
-      PatientEthnicity: Joi.array().items(Joi.string()).optional(),
-      PatientRace: Joi.array().items(Joi.string()).optional(),
+      PatientSSN: Joi.string().allow(null, '').optional(),
+      PatientGender: Joi.string().pattern(/^.$/).allow(null, '').optional(),
+      PatientEthnicity: Joi.array().items().allow(null, '').optional(),
+      PatientRace: Joi.array().items().allow(null, '').optional(),
 
       PatientAddress: Joi.object({
-        AddressLine1: Joi.string().min(1).max(100).required(),
+        AddressLine1: Joi.string().min(1).max(100).allow(null, '').optional(),
         AddressLine2: Joi.string().allow(null, '').optional(),
-        City: Joi.string().min(1).max(50).required(),
-        State: Joi.string().length(2).required(),
-        Zip: Joi.string().pattern(/^\d{5}(-\d{4})?$/).required()
-      }).required(),
+        City: Joi.string().min(1).max(50).allow(null, '').optional(),
+        State: Joi.string().length(2).allow(null, '').optional(),
+        Zip: Joi.string().allow(null, '').optional()
+      }).allow(null, '').optional(),
 
-      PatientPhone: Joi.string().pattern(/^\d{3}-\d{3}-\d{4}$/).optional(),
+      PatientPhone: Joi.string().allow('').required(),
       PatientMobilePhone: Joi.string().allow(null, '').optional(),
-      PatientFloor: Joi.string().optional(),
-      PatientRoom: Joi.string().optional(),
-      PatientAdmitDate: Joi.date().iso().required(),
+      PatientFloor: Joi.string().allow(null, '').optional(),
+      PatientRoom: Joi.string().allow(null, '').optional(),
+      PatientAdmitDate: Joi.date().iso().allow(null, '').optional(),
 
       Facility: Joi.object({
-        FacilityName: Joi.string().required(),
-        PlaceOfServiceCode: Joi.number().integer().required(),
-        NPI: Joi.string().pattern(/^\d{10}$/).required(),
-        ExternalID: Joi.string().required(),
+        FacilityName: Joi.string().allow(null, '').required(),
+        PlaceOfServiceCode: Joi.number().integer().allow(null, '').required(),
+        NPI: Joi.string().allow(null, '').required(),
+        ExternalID: Joi.string().allow(null, '').required(),
 
         FacilityAddress: Joi.object({
-          AddressLine1: Joi.string().min(1).max(100).required(),
+          AddressLine1: Joi.string().min(1).max(100).allow(null, '').optional(),
           AddressLine2: Joi.string().allow(null, '').optional(),
-          City: Joi.string().min(1).max(50).required(),
-          State: Joi.string().length(2).required(),
-          Zip: Joi.string().pattern(/^\d{5}(-\d{4})?$/).required()
-        }).required()
-      }).required(),
+          City: Joi.string().min(1).max(50).allow(null, '').optional(),
+          State: Joi.string().length(2).allow(null, '').optional(),
+          Zip: Joi.string().allow(null, '').optional()
+        }).allow(null, '').optional()
+
+      }).allow(null, '').optional(),
 
       Insurance: Joi.array().items(
         Joi.object({
           InsuranceSetID: Joi.number().integer().required(),
-          CompanyName: Joi.string().required(),
-          CompanyAddress: Joi.object().optional(), // Could expand based on fields
-          SubscriberAddress: Joi.object().optional(), // Could expand based on fields
-          InsurancePriority: Joi.string().valid('Primary', 'Secondary', 'Tertiary').required(),
-          PolicyNumber: Joi.string().required(),
-          SubscriberEmployerAddress: Joi.object().optional() // Could expand based on fields
+          CompanyName: Joi.string().allow(null, '').required(),
+          CompanyAddress: Joi.object().allow(null, '').optional(),
+          SubscriberAddress: Joi.object().allow(null, '').optional(),
+          InsurancePriority: Joi.string().allow(null, '').required(),
+          PolicyNumber: Joi.string().allow(null, '').required(),
+          SubscriberEmployerAddress: Joi.object().allow(null, '').optional()
         })
-      ).min(1).required(),
+      ).allow(null).required(),
 
       PatientLanguage: Joi.object({
-        LanguageName: Joi.string().required(),
-        Code_639_1: Joi.string().length(2).required(),
-        Code_639_2: Joi.string().length(3).required()
-      }).required(),
+        LanguageName: Joi.string().allow(null, '').required(),
+        Code_639_1: Joi.string().length(2).allow(null, '').required(),
+        Code_639_2: Joi.string().length(3).allow(null, '').required()
+      }).allow(null, '').optional(),
 
-      IsACO: Joi.boolean().required(),
-      PatientEnrollments: Joi.array().items(Joi.object()).optional(),
-      MedicareNumber: Joi.string().optional()
+      IsACO: Joi.boolean().allow(null, '').optional(),
+      PatientEnrollments: Joi.array().items(Joi.object().allow(null, '')).optional(),
+      MedicareNumber: Joi.string().allow(null, '').optional()
     }).required()
   }).required()
 });

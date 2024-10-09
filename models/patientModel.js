@@ -90,24 +90,24 @@ export class Patient {
     const insertBinds = {
       incomingPatientId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT },
       externalPatientId: this.patientData.PatientID,
-      patientEventId: this.patientData.PatientEventID,
-      patientStatus: this.patientData.PatientStatus,
+      patientEventId: this.patientData.PatientEventID || null,
+      patientStatus: this.patientData.PatientStatus || null,
       patientFirst: this.patientData.PatientFirst,
-      patientMiddle: this.patientData.PatientMiddle,
-      patientLast: this.patientData.PatientLast,
-      patientDob: this.patientData.PatientDOB,
-      patientSsn: this.patientData.PatientSSN,
-      patientGender: this.patientData.PatientGender,
+      patientMiddle: this.patientData.PatientMiddle || null,
+      patientLast: this.patientData.PatientLast || null,
+      patientDob: this.patientData.PatientDOB || null,
+      patientSsn: this.patientData.PatientSSN || null,
+      patientGender: this.patientData.PatientGender || null,
       patientAddressLine1: this.patientData.PatientAddress?.AddressLine1 || null,
       patientAddressLine2: this.patientData.PatientAddress?.AddressLine2 || null,
       patientCity: this.patientData.PatientAddress?.City || null,
       patientState: this.patientData.PatientAddress?.State || null,
       patientZip: this.patientData.PatientAddress?.Zip || null,
       patientPhone: this.patientData.PatientPhone,
-      patientMobilePhone: this.patientData.PatientMobilePhone,
-      patientFloor: this.patientData.PatientFloor,
-      patientRoom: this.patientData.PatientRoom,
-      patientAdmitDate: this.patientData.PatientAdmitDate.split('T')[0],
+      patientMobilePhone: this.patientData.PatientMobilePhone || null,
+      patientFloor: this.patientData.PatientFloor || null,
+      patientRoom: this.patientData.PatientRoom || null,
+      patientAdmitDate: this.patientData.PatientAdmitDate ? this.patientData.PatientAdmitDate.split('T')[0] : null,
       facilityName: this.patientData.Facility?.FacilityName || null,
       placeOfServiceCode: this.patientData.Facility?.PlaceOfServiceCode || null,
       facilityNpi: this.patientData.Facility?.NPI || null,
@@ -117,8 +117,8 @@ export class Patient {
       facilityCity: this.patientData.Facility?.FacilityAddress?.City || null,
       facilityState: this.patientData.Facility?.FacilityAddress?.State || null,
       facilityZip: this.patientData.Facility?.FacilityAddress?.Zip || null,
-      medicareNumber: this.patientData.MedicareNumber,
-      isAco: `${this.patientData.IsACO ? 1 : 0}`,
+      medicareNumber: this.patientData.MedicareNumber || null,
+      isAco: `${this.patientData.IsACO ? 1 : 0}` || null,
       source:this.source
     };
 
@@ -163,24 +163,24 @@ export class Patient {
   
     const updateBinds = {
       externalPatientId: this.patientData.PatientID,
-      patientEventId: this.patientData.PatientEventID,
-      patientStatus: this.patientData.PatientStatus,
-      patientFirst: this.patientData.PatientFirst,
-      patientMiddle: this.patientData.PatientMiddle,
-      patientLast: this.patientData.PatientLast,
-      patientDob: this.patientData.PatientDOB,
-      patientSsn: this.patientData.PatientSSN,
-      patientGender: this.patientData.PatientGender,
+      patientEventId: this.patientData.PatientEventID || null,
+      patientStatus: this.patientData.PatientStatus || null,
+      patientFirst: this.patientData.PatientFirst || null,
+      patientMiddle: this.patientData.PatientMiddle || null,
+      patientLast: this.patientData.PatientLast || null,
+      patientDob: this.patientData.PatientDOB || null,
+      patientSsn: this.patientData.PatientSSN || null,
+      patientGender: this.patientData.PatientGender || null,
       patientAddressLine1: this.patientData.PatientAddress?.AddressLine1 || null,
       patientAddressLine2: this.patientData.PatientAddress?.AddressLine2 || null,
       patientCity: this.patientData.PatientAddress?.City || null,
       patientState: this.patientData.PatientAddress?.State || null,
       patientZip: this.patientData.PatientAddress?.Zip || null,
-      patientPhone: this.patientData.PatientPhone,
-      patientMobilePhone: this.patientData.PatientMobilePhone,
-      patientFloor: this.patientData.PatientFloor,
-      patientRoom: this.patientData.PatientRoom,
-      patientAdmitDate: this.patientData.PatientAdmitDate.split('T')[0],
+      patientPhone: this.patientData.PatientPhone || null,
+      patientMobilePhone: this.patientData.PatientMobilePhone || null,
+      patientFloor: this.patientData.PatientFloor || null,
+      patientRoom: this.patientData.PatientRoom || null,
+      patientAdmitDate: this.patientData.PatientAdmitDate ? this.patientData.PatientAdmitDate.split('T')[0] : null,
       facilityName: this.patientData.Facility?.FacilityName || null,
       placeOfServiceCode: this.patientData.Facility?.PlaceOfServiceCode || null,
       facilityNpi: this.patientData.Facility?.NPI || null,
@@ -190,8 +190,8 @@ export class Patient {
       facilityCity: this.patientData.Facility?.FacilityAddress?.City || null,
       facilityState: this.patientData.Facility?.FacilityAddress?.State || null,
       facilityZip: this.patientData.Facility?.FacilityAddress?.Zip || null,
-      medicareNumber: this.patientData.MedicareNumber,
-      isAco: `${this.patientData.IsACO ? 1 : 0}`,
+      medicareNumber: this.patientData.MedicareNumber || null,
+      isAco: `${this.patientData.IsACO ? 1 : 0}` || null,
       source: this.source,
       updatedPatientId: updatedPatientId
     };
@@ -219,7 +219,7 @@ export class Patient {
   async insertInsurance(patientId) {
 
     const insuranceData = this.patientData.Insurance;
-    if (!insuranceData || insuranceData.length === 0) return;
+    if (!insuranceData || insuranceData.length === 0) return true;
 
     let connection= await this.getConnection();
 
@@ -236,12 +236,12 @@ export class Patient {
     const insuranceBinds = insuranceData.map(insurance => ({
       integratedPatientId: patientId,
       insuranceSetId: insurance.InsuranceSetID,
-      companyName: insurance.CompanyName,
+      companyName: insurance.CompanyName || null,
       insurancePriority: insurance.InsurancePriority,
       policyNumber: insurance.PolicyNumber,
-      companyAddress: JSON.stringify(insurance.CompanyAddress),
-      subscriberAddress: JSON.stringify(insurance.SubscriberAddress),
-      subscriberEmployerAddress: JSON.stringify(insurance.SubscriberEmployerAddress)
+      companyAddress: insurance.CompanyAddress ? JSON.stringify(insurance.CompanyAddress) : null,
+      subscriberAddress: insurance.SubscriberAddress ? JSON.stringify(insurance.SubscriberAddress) : null,
+      subscriberEmployerAddress: insurance.SubscriberEmployerAddress ? JSON.stringify(insurance.SubscriberEmployerAddress) : null
     }));
 
     try {
@@ -285,7 +285,7 @@ try {
       await connection.execute(updateSql, {
         integratedPatientId: patientId,
         insuranceSetId: insurance.InsuranceSetID,
-        companyName: insurance.CompanyName,
+        companyName: insurance.CompanyName || null,
         insurancePriority: insurance.InsurancePriority,
         policyNumber: insurance.PolicyNumber,
         companyAddress: insurance.CompanyAddress ? JSON.stringify(insurance.CompanyAddress) : null,
